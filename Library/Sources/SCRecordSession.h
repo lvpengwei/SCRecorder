@@ -68,6 +68,11 @@ extern NSString *__nonnull const SCRecordSessionDocumentDirectory;
 @property (copy, nonatomic) NSString *__nullable fileExtension;
 
 /**
+ MetaData
+ */
+@property (nonatomic, copy) NSArray<AVMetadataItem *> *metadata;
+
+/**
  The output url based on the identifier, the recordSegmentsDirectory and the fileExtension
  */
 @property (readonly, nonatomic) NSURL *__nonnull outputUrl;

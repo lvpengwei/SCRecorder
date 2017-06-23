@@ -306,7 +306,11 @@ NSString * const SCRecordSessionDocumentDirectory = @"DocumentDirectory";
         
         if (file != nil) {
             writer = [[AVAssetWriter alloc] initWithURL:file fileType:fileType error:&theError];
-            writer.metadata = [SCRecorderTools assetWriterMetadata];
+            if (_metadata.count > 0 ) {
+                writer.metadata = _metadata;
+            } else {
+                writer.metadata = [SCRecorderTools assetWriterMetadata];
+            }
         }
     } else {
         theError = [SCRecordSession createError:@"No fileType has been set in the SCRecordSession"];
