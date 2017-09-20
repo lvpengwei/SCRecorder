@@ -196,6 +196,15 @@ static char* LoadedTimeRanges = "LoadedTimeRanges";
             if (pixelBuffer != nil) {
                 CIImage *inputImage = [CIImage imageWithCVPixelBuffer:pixelBuffer];
 
+                CFDictionaryRef attr = CVBufferGetAttachments(pixelBuffer, kCVAttachmentMode_ShouldPropagate);
+                CFDictionaryRef aspectRatioDict = CFDictionaryGetValue(attr, kCVImageBufferPixelAspectRatioKey);
+                if (aspectRatioDict != nil) {
+                    CGFloat width = [(NSNumber *)CFDictionaryGetValue(aspectRatioDict, kCVImageBufferPixelAspectRatioHorizontalSpacingKey) floatValue];
+                    CGFloat height = [(NSNumber *)CFDictionaryGetValue(aspectRatioDict, kCVImageBufferPixelAspectRatioVerticalSpacingKey) floatValue];
+                    if (width != 0 && height != 0) {
+                        inputImage = [inputImage imageByApplyingTransform:CGAffineTransformMakeScale(width / height, 1)];
+                    }
+                }
                 renderer.CIImageTime = CMTimeGetSeconds(outputItemTime);
                 renderer.CIImage = inputImage;
 
