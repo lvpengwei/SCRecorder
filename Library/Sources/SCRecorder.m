@@ -795,14 +795,22 @@ static char* SCRecorderPhotoOptionsContext = "PhotoOptionsContext";
                 id<SCRecorderDelegate> delegate = self.delegate;
 //                NSLog(@"APPENDING");
 
+                CFRetain(sampleBuffer);
                 [recordSession appendAudioSampleBuffer:sampleBuffer completion:^(BOOL success) {
+                    BOOL released = NO;
                     if (success) {
                         if ([delegate respondsToSelector:@selector(recorder:didAppendAudioSampleBufferInSession:)]) {
                             dispatch_async(dispatch_get_main_queue(), ^{
                                 [delegate recorder:self didAppendAudioSampleBufferInSession:recordSession];
                             });
                         }
-
+                        if ([delegate respondsToSelector:@selector(recorder:didAppendAudioSampleBuffer:InSession:)]) {
+                            released = YES;
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [delegate recorder:self didAppendAudioSampleBuffer:sampleBuffer InSession:recordSession];
+                                CFRelease(sampleBuffer);
+                            });
+                        }
                         [self checkRecordSessionDuration:recordSession];
                     } else {
                         if ([delegate respondsToSelector:@selector(recorder:didSkipAudioSampleBufferInSession:)]) {
@@ -810,6 +818,9 @@ static char* SCRecorderPhotoOptionsContext = "PhotoOptionsContext";
                                 [delegate recorder:self didSkipAudioSampleBufferInSession:recordSession];
                             });
                         }
+                    }
+                    if (!released) {
+                        CFRelease(sampleBuffer);
                     }
                 }];
             } else {
