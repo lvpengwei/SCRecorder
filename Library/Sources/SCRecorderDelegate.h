@@ -104,7 +104,7 @@ typedef NS_ENUM(NSInteger, SCFlashMode) {
  */
 - (void)recorder:(SCRecorder *__nonnull)recorder didAppendAudioSampleBufferInSession:(SCRecordSession *__nonnull)session;
 
-- (void)recorder:(SCRecorder *__nonnull)recorder didAppendAudioSampleBuffer:(CMSampleBufferRef)sampleBuffer InSession:(SCRecordSession *__nonnull)session;
+- (void)recorder:(SCRecorder *__nonnull)recorder didAppendAudioSampleBuffer:(CMSampleBufferRef __nonnull)sampleBuffer InSession:(SCRecordSession *__nonnull)session;
 
 /**
  Called when the recorder has skipped an audio buffer in a session
