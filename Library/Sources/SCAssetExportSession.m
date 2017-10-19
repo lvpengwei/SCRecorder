@@ -41,6 +41,7 @@
 @property (nonatomic, assign) BOOL needsLeaveAudio;
 @property (nonatomic, assign) BOOL needsLeaveVideo;
 @property (nonatomic, assign) CMTime nextAllowedVideoFrame;
+@property (nonatomic, strong) dispatch_semaphore_t copyingVideoNextSampleBuffer;
 
 @end
 
@@ -59,6 +60,7 @@
         _timeRange = CMTimeRangeMake(kCMTimeZero, kCMTimePositiveInfinity);
         _translatesFilterIntoComposition = YES;
         _shouldOptimizeForNetworkUse = NO;
+        _copyingVideoNextSampleBuffer = dispatch_semaphore_create(1);
     }
 
     return self;
@@ -231,7 +233,15 @@ static CGContextRef SCCreateContextFromPixelBuffer(CVPixelBufferRef pixelBuffer)
         videoReadingQueue.maxQueueSize = 2;
 
         [videoReadingQueue startProcessingWithBlock:^id{
-            CMSampleBufferRef sampleBuffer = [wSelf.videoOutput copyNextSampleBuffer];
+            __strong typeof(self) strongSelf = wSelf;
+            if (strongSelf == nil) return nil;
+            dispatch_semaphore_wait(strongSelf.copyingVideoNextSampleBuffer, DISPATCH_TIME_FOREVER);
+            if (strongSelf.cancelled) {
+                dispatch_semaphore_signal(strongSelf.copyingVideoNextSampleBuffer);
+                return nil;
+            }
+            CMSampleBufferRef sampleBuffer = [strongSelf.videoOutput copyNextSampleBuffer];
+            dispatch_semaphore_signal(strongSelf.copyingVideoNextSampleBuffer);
             SCSampleBufferHolder *holder = nil;
             
             if (sampleBuffer != nil) {
@@ -462,10 +472,9 @@ static CGContextRef SCCreateContextFromPixelBuffer(CVPixelBufferRef pixelBuffer)
     }
 }
 
-- (void)cancelExport
-{
+- (void)cancelExport {
+    dispatch_semaphore_wait(_copyingVideoNextSampleBuffer, DISPATCH_TIME_FOREVER);
     _cancelled = YES;
-
     dispatch_sync(_videoQueue, ^{
         if (_needsLeaveVideo) {
             _needsLeaveVideo = NO;
@@ -481,6 +490,7 @@ static CGContextRef SCCreateContextFromPixelBuffer(CVPixelBufferRef pixelBuffer)
 
         [_reader cancelReading];
         [_writer cancelWriting];
+        dispatch_semaphore_signal(_copyingVideoNextSampleBuffer);
     });
 }
 
