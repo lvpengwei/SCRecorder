@@ -43,6 +43,8 @@
  */
 @property (strong, nonatomic) NSString *__nullable outputFileType;
 
+@property (strong, nonatomic) NSArray<AVMetadataItem *> *__nullable metadata;
+
 /**
  The context type to use for rendering the images through a filter
  */

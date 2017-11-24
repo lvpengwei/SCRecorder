@@ -674,7 +674,11 @@ static CGContextRef SCCreateContextFromPixelBuffer(CVPixelBufferRef pixelBuffer)
     
     _writer = [AVAssetWriter assetWriterWithURL:self.outputUrl fileType:self.outputFileType error:&error];
     _writer.shouldOptimizeForNetworkUse = _shouldOptimizeForNetworkUse;
-    _writer.metadata = [SCRecorderTools assetWriterMetadata];
+    if (_metadata != nil) {
+        _writer.metadata = _metadata;
+    } else {
+        _writer.metadata = [SCRecorderTools assetWriterMetadata];
+    }
 
     EnsureSuccess(error, completionHandler);
     
